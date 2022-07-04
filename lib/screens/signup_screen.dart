@@ -23,6 +23,22 @@ class _SignupScreenState extends State<SignupScreen> {
     'password': '',
   };
 
+  void _showErrorDialog(String message) {
+    showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: Text('An error occurred'),
+              content: Text(message),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('ok'))
+              ],
+            ));
+  }
+
   final TextEditingController _passwordController = TextEditingController();
   var _isLoading = false;
   var _obscureText = true;
@@ -69,29 +85,26 @@ class _SignupScreenState extends State<SignupScreen> {
           _authData['password']!,
         );
       }
-    } on HttpException catch (error) {
-      var errorMessage = 'Authentication failed';
-      if (error.toString().contains('EMAIL_EXISTS')) {
-        errorMessage = 'This email address is already in use.';
-      }
-      if (error.toString().contains('INVALID_EMAIL')) {
-        errorMessage = 'This is not a valid Email address.';
-      }
-      if (error.toString().contains('WEAK_PASSWORD')) {
-        errorMessage = 'Password is too weak.';
-      }
-      if (error.toString().contains('EMAIL_NOT_FOUND')) {
-        errorMessage = 'couldn\'t find a user with that email.';
-      }
-      if (error.toString().contains('INVALID_PASSWORD')) {
-        errorMessage = 'Password is incorrect.';
-      }
-      showSnackbar(context, errorMessage);
+      // } on HttpException catch (error) {
+      //   print(error);
+      //   var errorMessage = 'Authentication failed!';
+      //   if (error.toString().contains('EMAIL_EXISTS')) {
+      //     errorMessage = 'This email address is already in use.';
+      //   } else if (error.toString().contains('INVALID_EMAIL')) {
+      //     errorMessage = 'This is not a valid Email address.';
+      //     showSnackbar(context, errorMessage);
+      //   } else if (error.toString().contains('WEAK_PASSWORD')) {
+      //     errorMessage = 'Password is too weak.';
+      //   } else if (error.toString().contains('EMAIL_NOT_FOUND')) {
+      //     errorMessage = 'couldn\'t find a user with that email.';
+      //   } else if (error.toString().contains('INVALID_PASSWORD')) {
+      //     errorMessage = 'Password is incorrect.';
+      //   }
+      //   showSnackbar(context, errorMessage);
     } catch (error) {
       const errorMessage = 'Couldn\'t authenticate user. Try again later.';
       showSnackbar(context, errorMessage);
     }
-
     setState(() {
       _isLoading = false;
     });
