@@ -32,34 +32,15 @@ class MyApp extends StatelessWidget {
           value: Auth(),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Journal',
-        theme: ThemeData(
-          primarySwatch: primaryColor,
+      child: Consumer<Auth>(
+        builder: (context, auth, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Journal',
+          theme: ThemeData(
+            primarySwatch: primaryColor,
+          ),
+          home: auth.isAuth ? const NoteListScreen() : const SignupScreen(),
         ),
-        home: StreamBuilder(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.active) {
-                if (snapshot.hasData) {
-                  return const NoteListScreen();
-                }
-              } else if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Some internal error occured'),
-                );
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(
-                      color: Theme.of(context).primaryColor),
-                );
-              }
-
-              return const SignupScreen();
-            }),
       ),
     );
   }

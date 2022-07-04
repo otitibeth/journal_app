@@ -20,12 +20,6 @@ class NoteListScreen extends StatefulWidget {
 }
 
 class _NoteListScreenState extends State<NoteListScreen> {
-  Future<DataSnapshot> getUsername() async {
-    final username = noteAppRef.child('users').child('name').get();
-
-    return username;
-  }
-
   @override
   Widget build(BuildContext context) {
     final noteData = Provider.of<Storage>(context);

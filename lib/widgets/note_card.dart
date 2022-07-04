@@ -35,12 +35,14 @@ class _NotecardState extends State<Notecard> {
 
   @override
   Widget build(BuildContext context) {
+    final date = widget.note.lastEditedDate;
+    final dateCreated = widget.note.dateCreated;
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => CreateNoteScreen(
-              noteId: widget.note.id!,
+              noteId: widget.note.id,
             ),
           ),
         );
@@ -54,39 +56,42 @@ class _NotecardState extends State<Notecard> {
             color: secondaryColor,
           ),
           child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Text(
-                  widget.note.title!,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Text(
-                widget.note.content,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 3,
-                style: TextStyle(color: Colors.grey.shade50),
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              Text(
-                widget.note.lastEditedDate != null
-                    ? 'Last editen on: ${widget.note.lastEditedDate}'
-                    : 'Last editen on: ${widget.note.dateCreated}',
-                style: TextStyle(
-                    color: Colors.grey.shade50,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
-              ),
-            ]),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Text(
+                      widget.note.title!,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    widget.note.content,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    style: TextStyle(color: Colors.grey.shade50),
+                  ),
+                  const SizedBox(
+                    height: 40,
+                  ),
+                  Text(
+                    date != null
+                        ? 'Last editen on: $date'
+                        : 'Last editen on: $dateCreated',
+                    style: TextStyle(
+                        color: Colors.grey.shade50,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ]),
           ),
         ),
       ),

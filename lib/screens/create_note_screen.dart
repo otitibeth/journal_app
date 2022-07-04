@@ -17,8 +17,9 @@ class CreateNoteScreen extends StatefulWidget {
 }
 
 class _CreateNoteScreenState extends State<CreateNoteScreen> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
+  final _titleFocusNode = FocusNode();
+  final _noteFocusNode = FocusNode();
+  final _form = GlobalKey<FormState>();
 
   bool get _isEditing => widget.noteId != '';
   var _isLoading = false;
@@ -29,20 +30,19 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
     'content': '',
   };
 
-  final userId = FirebaseAuth.instance.currentUser!.uid;
-
   var _editedNote = Note(
-      id: '',
-      title: '',
-      content: '',
-      dateCreated: DateTime.now(),
-      lastEditedDate: DateTime.now(),
-      uid: '');
+    id: '',
+    title: '',
+    content: '',
+    dateCreated: DateTime.now().toString(),
+    lastEditedDate: '',
+    // uid: '',
+  );
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _noteController.dispose();
+    _titleFocusNode.dispose();
+    _noteFocusNode.dispose();
     super.dispose();
   }
 
@@ -55,8 +55,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      // final NoteId = ModalRoute.of(context)?.settings.arguments as String?;
-      if (widget.noteId != '') {
+      final noteId = ModalRoute.of(context)?.settings.arguments as String?;
+      if (noteId != '') {
         _editedNote = Provider.of<Storage>(context).findById(widget.noteId);
       }
       _initValues = {
@@ -68,38 +68,45 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
     super.didChangeDependencies();
   }
 
-  Future<void> saveNote() async {
-    setState(() {
-      _isLoading = true;
-    });
+  void saveNote() {
+    // setState(() {
+    //   _isLoading = true;
+    // });
 
-    _editedNote = Note(
-      id: _editedNote.id,
-      title: _titleController.text,
-      content: _noteController.text,
-      dateCreated: _editedNote.dateCreated,
-      lastEditedDate: _editedNote.lastEditedDate,
-      uid: _editedNote.uid,
-    );
+    // _editedNote = Note(
+    //   id: _editedNote.id,
+    //   title: _titleController.text,
+    //   content: _noteController.text,
+    //   dateCreated: _editedNote.dateCreated,
+    //   lastEditedDate: _editedNote.lastEditedDate,
+    //   // uid: _editedNote.uid,
+    // );
 
     print('this is my ${_editedNote.id}');
 
-    if (_editedNote.id == '') {
-      try {
-        // await Provider.of<Storage>(context, listen: false).addNote(_editedNote);
-      } catch (e) {
-        await showSnackbar(context, 'Couldn\'t add note. Error: $e');
-      }
+    final isValid = _form.currentState!.validate();
+    if (!isValid) {
+      return;
     }
-    setState(() {
-      _isLoading = false;
-    });
+    _form.currentState!.save();
+    if (_editedNote.id == '') {
+      // try {
+      Provider.of<Storage>(context, listen: false).addNote(_editedNote);
+      // } catch (e) {
+      //   await showSnackbar(context, 'Couldn\'t add note. Error: $e');
+      // }
+    } else {
+      Provider.of<Storage>(context, listen: false)
+          .updateNote(_editedNote.id, _editedNote);
+    }
+    // setState(() {
+    //   _isLoading = false;
+    // });
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Note' : 'Add Note'),
@@ -131,36 +138,79 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : Column(
-                  children: [
-                    TextField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        hintText: 'Title',
-                        hintStyle: TextStyle(
-                          fontSize: 25,
+      body: Form(
+        key: _form,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : Column(
+                    children: [
+                      TextFormField(
+                        initialValue: _initValues['title'],
+                        decoration: const InputDecoration(
+                          hintText: 'Title',
+                          hintStyle: TextStyle(
+                            fontSize: 25,
+                          ),
+                          border: InputBorder.none,
                         ),
-                        border: InputBorder.none,
+                        focusNode: _titleFocusNode,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).requestFocus(_titleFocusNode);
+                        },
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Enter Title.';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _editedNote = Note(
+                            title: value,
+                            content: _editedNote.content,
+                            id: _editedNote.id,
+                            dateCreated: _editedNote.dateCreated,
+                            lastEditedDate: _editedNote.lastEditedDate,
+                          );
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 15),
-                    TextField(
-                      controller: _noteController,
-                      decoration: const InputDecoration(
-                        hintText: 'Note',
-                        border: InputBorder.none,
+                      const SizedBox(height: 15),
+                      TextFormField(
+                        initialValue: _initValues['content'],
+                        decoration: const InputDecoration(
+                          hintText: 'Note',
+                          border: InputBorder.none,
+                        ),
+                        focusNode: _noteFocusNode,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).requestFocus(_noteFocusNode);
+                        },
+                        minLines: 1,
+                        textInputAction: TextInputAction.done,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Enter Note.';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _editedNote = Note(
+                            title: _editedNote.title,
+                            content: value ?? '',
+                            id: _editedNote.id,
+                            dateCreated: _editedNote.dateCreated,
+                            lastEditedDate: _editedNote.lastEditedDate,
+                          );
+                        },
                       ),
-                      minLines: 1,
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
